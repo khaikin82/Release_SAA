@@ -1,6 +1,23 @@
 const exchangeRateStatusCounts = { up: 0, down: 0, partial: 0 };
 const goldStatusCounts = { up: 0, down: 0, partial: 0 };
 
+const exchangeRateStatusCountsSave =
+  JSON.parse(localStorage.getItem("exchangeRateStatusCounts")) || {};
+if (exchangeRateStatusCountsSave.up)
+  exchangeRateStatusCounts.up = exchangeRateStatusCountsSave.up;
+if (exchangeRateStatusCountsSave.down)
+  exchangeRateStatusCounts.down = exchangeRateStatusCountsSave.down;
+if (exchangeRateStatusCountsSave.partial)
+  exchangeRateStatusCounts.partial = exchangeRateStatusCountsSave.partial;
+
+const goldStatusCountsSave =
+  JSON.parse(localStorage.getItem("goldStatusCounts")) || {};
+if (goldStatusCountsSave.up) goldStatusCounts.up = goldStatusCountsSave.up;
+if (goldStatusCountsSave.down)
+  goldStatusCounts.down = goldStatusCountsSave.down;
+if (goldStatusCountsSave.partial)
+  goldStatusCounts.partial = goldStatusCountsSave.partial;
+
 const trafficChartContext = document
   .getElementById("trafficChart")
   .getContext("2d");
@@ -13,7 +30,7 @@ const trafficChart = new Chart(trafficChartContext, {
       {
         label: "Traffic",
         data: [], // Số lượng yêu cầu
-        borderColor: "rgba(75, 192, 192, 1)",
+        borderColor: "rgb(77, 97, 97)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         fill: true,
       },
@@ -75,16 +92,71 @@ const trafficChartGold = new Chart(trafficChartContextGold, {
   },
 });
 
+function loadTrafficData() {
+  const trafficData = JSON.parse(localStorage.getItem("trafficData")) || {
+    labels: [],
+    data: [],
+  };
+
+  trafficChart.data.labels = trafficData.labels;
+  trafficChart.data.datasets[0].data = trafficData.data;
+  trafficChart.update();
+}
+
+// Gọi hàm này khi bạn muốn tải dữ liệu từ localStorage, ví dụ: khi khởi tạo biểu đồ
+loadTrafficData();
+
 // let prevReqCountExchangeRateApi = 0
 // Hàm để cập nhật dữ liệu biểu đồ
+
 function updateTrafficChart(time, req) {
+  // Lấy mảng lưu trữ từ localStorage hoặc tạo mảng mới nếu chưa tồn tại
+  const trafficData = JSON.parse(localStorage.getItem("trafficData")) || {
+    labels: [],
+    data: [],
+  };
+
+  // Thêm time và req vào mảng
+  trafficData.labels.push(time);
+  trafficData.data.push(req);
+
+  // Lưu mảng cập nhật vào localStorage
+  localStorage.setItem("trafficData", JSON.stringify(trafficData));
+
+  // Cập nhật biểu đồ
   trafficChart.data.labels.push(time);
   trafficChart.data.datasets[0].data.push(req);
   trafficChart.update();
 }
 
+function loadTrafficDataGold() {
+  const trafficDataGold = JSON.parse(
+    localStorage.getItem("trafficDataGold")
+  ) || { labels: [], data: [] };
+
+  trafficChartGold.data.labels = trafficDataGold.labels;
+  trafficChartGold.data.datasets[0].data = trafficDataGold.data;
+  trafficChartGold.update();
+}
+
+// Gọi hàm này khi bạn muốn tải dữ liệu từ localStorage, ví dụ: khi khởi tạo biểu đồ
+loadTrafficDataGold();
+
 // let prevReqCountGoldApi = 0
 function updateTrafficChartGold(time, req) {
+  // Lấy mảng lưu trữ từ localStorage hoặc tạo mảng mới nếu chưa tồn tại
+  const trafficDataGold = JSON.parse(
+    localStorage.getItem("trafficDataGold")
+  ) || { labels: [], data: [] };
+
+  // Thêm time và req vào mảng
+  trafficDataGold.labels.push(time);
+  trafficDataGold.data.push(req);
+
+  // Lưu mảng cập nhật vào localStorage
+  localStorage.setItem("trafficDataGold", JSON.stringify(trafficDataGold));
+
+  // Cập nhật biểu đồ
   trafficChartGold.data.labels.push(time);
   trafficChartGold.data.datasets[0].data.push(req);
   trafficChartGold.update();
@@ -202,14 +274,36 @@ const goldPieChart = new Chart(goldPieCtx, {
   },
 });
 // Mảng để lưu trữ thời gian phản hồi cho mỗi container
-const responseTimeDataContainer1 = [];
-const responseTimeDataContainer2 = [];
-const responseTimeLabelsContainer1 = [];
-const responseTimeLabelsContainer2 = [];
-const responseTimeColorsContainer1 = [];
-const responseTimeColorsContainer2 = [];
-const responseTimeBgColorsContainer1 = [];
-const responseTimeBgColorsContainer2 = [];
+// const responseTimeDataContainer1 = [];
+// const responseTimeDataContainer2 = [];
+// const responseTimeLabelsContainer1 = [];
+// const responseTimeLabelsContainer2 = [];
+// const responseTimeColorsContainer1 = [];
+// const responseTimeColorsContainer2 = [];
+// const responseTimeBgColorsContainer1 = [];
+// const responseTimeBgColorsContainer2 = [];
+
+// Lấy object từ localStorage
+const savedResponseContainers =
+  JSON.parse(localStorage.getItem("responseContainers")) || {};
+
+// Truy cập lại các biến từ object đã lưu
+const responseTimeDataContainer1 =
+  savedResponseContainers.responseTimeDataContainer1 || [];
+const responseTimeDataContainer2 =
+  savedResponseContainers.responseTimeDataContainer2 || [];
+const responseTimeLabelsContainer1 =
+  savedResponseContainers.responseTimeLabelsContainer1 || [];
+const responseTimeLabelsContainer2 =
+  savedResponseContainers.responseTimeLabelsContainer2 || [];
+const responseTimeColorsContainer1 =
+  savedResponseContainers.responseTimeColorsContainer1 || [];
+const responseTimeColorsContainer2 =
+  savedResponseContainers.responseTimeColorsContainer2 || [];
+const responseTimeBgColorsContainer1 =
+  savedResponseContainers.responseTimeBgColorsContainer1 || [];
+const responseTimeBgColorsContainer2 =
+  savedResponseContainers.responseTimeBgColorsContainer2 || [];
 
 function getColorForStatus(status, isBackground = false) {
   if (status === "DOWN") {
@@ -387,21 +481,41 @@ const cpuCtx = document.getElementById("cpuChart").getContext("2d");
 const memoryCtx = document.getElementById("memoryChart").getContext("2d");
 const networkCtx = document.getElementById("networkChart").getContext("2d");
 
-const cpuUsageData = [];
-const memoryUsageData = [];
-const networkReceivedData = [];
-const networkTransmittedData = [];
-const labels = [];
+// Lấy các biến từ localStorage
+const cpuUsageData = JSON.parse(localStorage.getItem("cpuUsageData")) || [];
+const memoryUsageData =
+  JSON.parse(localStorage.getItem("memoryUsageData")) || [];
+const networkReceivedData =
+  JSON.parse(localStorage.getItem("networkReceivedData")) || [];
+const networkTransmittedData =
+  JSON.parse(localStorage.getItem("networkTransmittedData")) || [];
+const labels = JSON.parse(localStorage.getItem("labels")) || [];
+
+// const cpuUsageData = [];
+// const memoryUsageData = [];
+// const networkReceivedData = [];
+// const networkTransmittedData = [];
+// const labels = [];
 
 const cpuCtx2 = document.getElementById("cpuChart2").getContext("2d");
 const memoryCtx2 = document.getElementById("memoryChart2").getContext("2d");
 const networkCtx2 = document.getElementById("networkChart2").getContext("2d");
 
-const cpuUsageData2 = [];
-const memoryUsageData2 = [];
-const networkReceivedData2 = [];
-const networkTransmittedData2 = [];
-const labels2 = [];
+// Lấy các biến từ localStorage
+const cpuUsageData2 = JSON.parse(localStorage.getItem("cpuUsageData2")) || [];
+const memoryUsageData2 =
+  JSON.parse(localStorage.getItem("memoryUsageData2")) || [];
+const networkReceivedData2 =
+  JSON.parse(localStorage.getItem("networkReceivedData2")) || [];
+const networkTransmittedData2 =
+  JSON.parse(localStorage.getItem("networkTransmittedData2")) || [];
+const labels2 = JSON.parse(localStorage.getItem("labels2")) || [];
+
+// const cpuUsageData2 = [];
+// const memoryUsageData2 = [];
+// const networkReceivedData2 = [];
+// const networkTransmittedData2 = [];
+// const labels2 = [];
 
 const commonConfig = (labels, data, label, borderColor, maxValue) => ({
   type: "line",
@@ -667,11 +781,11 @@ async function fetchHealthStatus() {
       goldEndpoint === "UP" &&
       goldContainer === "UP"
     ) {
-      goldStatusCounts.up++;
+      goldStatusCounts.up += 1;
     } else if (goldStatus === "PARTIALLY_UP") {
-      goldStatusCounts.partial++;
+      goldStatusCounts.partial += 1;
     } else if (goldStatus === "DOWN" || goldContainer !== "UP") {
-      goldStatusCounts.down++;
+      goldStatusCounts.down += 1;
     }
 
     // Cập nhật biểu đồ tròn
@@ -732,6 +846,52 @@ async function fetchHealthStatus() {
     // popup
     updatePopupChart(healthData);
     updatePopupChart2(healthData);
+
+    localStorage.setItem("cpuUsageData", JSON.stringify(cpuUsageData));
+    localStorage.setItem("memoryUsageData", JSON.stringify(memoryUsageData));
+    localStorage.setItem(
+      "networkReceivedData",
+      JSON.stringify(networkReceivedData)
+    );
+    localStorage.setItem(
+      "networkTransmittedData",
+      JSON.stringify(networkTransmittedData)
+    );
+    localStorage.setItem("labels", JSON.stringify(labels));
+
+    localStorage.setItem("cpuUsageData2", JSON.stringify(cpuUsageData2));
+    localStorage.setItem("memoryUsageData2", JSON.stringify(memoryUsageData2));
+    localStorage.setItem(
+      "networkReceivedData2",
+      JSON.stringify(networkReceivedData2)
+    );
+    localStorage.setItem(
+      "networkTransmittedData2",
+      JSON.stringify(networkTransmittedData2)
+    );
+    localStorage.setItem("labels2", JSON.stringify(labels2));
+
+    localStorage.setItem("goldStatusCounts", JSON.stringify(goldStatusCounts));
+    localStorage.setItem(
+      "exchangeRateStatusCounts",
+      JSON.stringify(exchangeRateStatusCounts)
+    );
+
+    const responseContainers = {
+      responseTimeDataContainer1,
+      responseTimeDataContainer2,
+      responseTimeLabelsContainer1,
+      responseTimeLabelsContainer2,
+      responseTimeColorsContainer1,
+      responseTimeColorsContainer2,
+      responseTimeBgColorsContainer1,
+      responseTimeBgColorsContainer2,
+    };
+    localStorage.setItem(
+      "responseContainers",
+      JSON.stringify(responseContainers)
+    );
+
     // end popup
   } catch (error) {
     console.error("Error fetching health status:", error);
